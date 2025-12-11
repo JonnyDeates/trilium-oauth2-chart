@@ -40,4 +40,4 @@ The chart's behavior is controlled through a `values.yaml` file.  Here are some 
 
 ## Contact
 
-For support or questions, please contact .
+For support or questions, please contact jonnydeates@gmail.com
