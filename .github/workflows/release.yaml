@@ -1,0 +1,45 @@
+name: Release Helm Chart
+
+on:
+  push:
+    tags:
+      - 'v*' # Triggers on tags like v1.0.0, v0.2.1
+
+env:
+  # CHANGE THIS: The path to your chart folder inside the repo
+  CHART_DIR: "./charts/secure-trilium-stack"
+  REGISTRY: ghcr.io
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write  # REQUIRED to push to ghcr.io
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Install Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: 'latest'
+
+      - name: Lint Chart
+        run: helm lint ${{ env.CHART_DIR }}
+
+      - name: Package Chart
+        run: helm package ${{ env.CHART_DIR }}
+
+      - name: Login to GitHub Container Registry
+        # Uses the automatic GITHUB_TOKEN
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | helm registry login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin
+
+      - name: Push Chart to OCI
+        run: |
+          # Note: GitHub requires the owner name to be lowercase
+          OWNER_LOWER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          
+          # Pushes to ghcr.io/username/charts
+          helm push ./*.tgz "oci://${{ env.REGISTRY }}/$OWNER_LOWER/charts"
