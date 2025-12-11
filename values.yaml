@@ -61,9 +61,6 @@ oauth2-proxy:
       - hosts: [notes.example.com] # You need to update this as well
         secretName: letsencrypt
 
-serviceAccount:
-  create: no
-
 ingress:
   enabled: true
   isStaging: true
