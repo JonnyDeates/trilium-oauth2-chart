@@ -3,7 +3,7 @@ name: Release Helm Chart
 on:
   push:
     tags:
-      - 'v*' # Triggers on tags like v1.0.0, v0.2.1
+      - '*' # Triggers on tags like v1.0.0, v0.2.1
 
 env:
   # CHANGE THIS: The path to your chart folder inside the repo
