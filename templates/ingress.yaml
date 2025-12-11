@@ -27,7 +27,7 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: {{ $.Release.Name }}-trilium
+                name: {{ $.Release.Name }}
                 port:
                   number: {{ $.Values.trilium.service.port }}
 {{- end }}
