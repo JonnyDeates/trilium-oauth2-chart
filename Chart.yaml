@@ -2,7 +2,7 @@ apiVersion: v2
 name: secure-trilium-stack
 description: A wrapper chart deploying TriliumNext protected by OAuth2-Proxy
 type: application
-version: 0.1.1
+version: 0.1.2
 appVersion: "1.0.0"
 dependencies:
   - name: trilium
