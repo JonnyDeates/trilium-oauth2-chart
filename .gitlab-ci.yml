@@ -4,7 +4,7 @@ stages:
 
 variables:
   # CHANGE THIS: The path to your chart folder inside the repo
-  CHART_DIR: "./charts/secure-trilium-stack"
+  CHART_DIR: "."
 
 lint-chart:
   stage: test

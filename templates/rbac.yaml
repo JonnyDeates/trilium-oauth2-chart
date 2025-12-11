@@ -9,9 +9,9 @@ metadata:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  name: {{ include "trilium-backup.fullname" . }}-role
+  name: {{ include "trilium-oauth2-chart.fullname" . }}-role
   labels:
-    {{- include "trilium-backup.labels" . | nindent 4 }}
+    {{- include "trilium-oauth2-chart.labels" . | nindent 4 }}
 rules:
   - apiGroups: [""]
     resources: ["pods", "pods/exec"]
@@ -25,7 +25,7 @@ metadata:
     {{- include "trilium-oauth2-chart.labels" . | nindent 4 }}
 subjects:
   - kind: ServiceAccount
-    name: {{ include "trilium-backup.serviceAccountName" . }}
+    name: {{ include "trilium-oauth2-chart.serviceAccountName" . }}
 roleRef:
   kind: Role
   name: {{ include "trilium-oauth2-chart.fullname" . }}-role

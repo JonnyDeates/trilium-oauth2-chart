@@ -8,10 +8,10 @@ metadata:
   annotations:
     "helm.sh/hook": test
 spec:
-  serviceAccountName: {{ include "trilium-oauth2-chart.serviceAccountName"  . }}
+  serviceAccountName: {{ include "trilium-oauth2-chart.serviceAccountName" . }}
   containers:
     - name: kubectl
-      image: "{{ .Values.backup.image.repository | default "alpine" }}:{{ .Values.backup.image.tag | default "latest" }}"
+      image: "alpine:latest"
       command: ['/bin/sh', '-c']
       args:
         - |

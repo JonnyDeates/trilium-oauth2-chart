@@ -11,11 +11,13 @@ spec:
     spec:
       template:
         spec:
-          serviceAccountName: {{ include "trilium-backup.serviceAccountName" . }}
+          serviceAccountName: {{ include "trilium-oauth2-chart.serviceAccountName" . }}
           containers:
             - name: backup-worker
-              image: "{{ .Values.backup.image.repository | default "alpine" }}:{{ .Values.backup.image.tag | default "latest" }}"
-              imagePullPolicy: "{{ .Values.backup.image.imagePullPolicy | default "IfNotPresent" }}"
+              {{- $backup := .Values.backup | default dict }}
+              {{- $image := $backup.image | default dict }}
+              image: "{{ $image.repository | default "alpine" }}:{{ $image.tag | default "latest" }}"
+              imagePullPolicy: "{{ $image.imagePullPolicy | default "IfNotPresent" }}"
               env:
                 # Environment Variables from values.yaml
                 - name: TRILIUM_LABEL_KEY
