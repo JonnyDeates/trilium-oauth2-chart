@@ -1,0 +1,13 @@
+apiVersion: v2
+name: secure-trilium-stack
+description: A wrapper chart deploying TriliumNext protected by OAuth2-Proxy
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+dependencies:
+  - name: trilium
+    version: "1.0.0" # Check hhttps://github.com/TriliumNext/helm-charts for the latest
+    repository: "file://./charts/trilium"
+  - name: oauth2-proxy
+    version: "9.0.0" # Check https://github.com/oauth2-proxy/manifests for the latest
+    repository: "https://oauth2-proxy.github.io/manifests"

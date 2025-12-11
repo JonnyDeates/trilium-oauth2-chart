@@ -1,0 +1,112 @@
+# Global settings
+email: "jonnydeates@gmail.com" # For Let's Encrypt
+
+# 1. TRILIUM CONFIGURATION (Sub-chart)
+# -------------------------------
+trilium:
+  image:
+    tag: v0.99.5
+    pullPolicy: IfNotPresent
+
+  config:
+    general:
+      noAuthentication: true
+      noBackup: false
+    network:
+      trustedReverseProxy: true
+
+  persistence:
+    existingClaim: "" # Use this to override the creation of one
+    size: 5Gi
+    accessMode: ReadWriteOnce
+    storageClass: "" # Leave empty for default
+
+  service:
+    type: ClusterIP
+    port: 8080
+    targetPort: 8080
+
+# 2. OAUTH2-PROXY CONFIGURATION (Sub-chart)
+# --------------------------------------------
+oauth2-proxy:
+  config:
+    clientID: "CHANGE_ME_GOOGLE_CLIENT_ID"
+    clientSecret: "CHANGE_ME_GOOGLE_CLIENT_SECRET"
+    cookieSecret: "CHANGE_ME_RANDOM_STRING_32_BYTES"
+  extraArgs:
+    provider: oidc
+    oidc-issuer-url: https://gitlab.example.com
+    redirect-url: https://notes.example.com/oauth2/callback
+    scope: "openid profile email"
+    email-domain: "*"
+    reverse-proxy: "true"
+    cookie-secure: "true"
+    set-authorization-header: "true"
+    pass-authorization-header: "true"
+    pass-user-headers: "true"
+  image:
+    registry: "quay.io"
+    repository: "oauth2-proxy/oauth2-proxy"
+    tag: ""  # Pick the latest stable
+  ingress:
+    enabled: true
+    annotations:
+      cert-manager.io/issuer: letsencrypt
+    ingressClassName: nginx
+    path: /oauth2
+    pathType: Prefix
+    hosts:
+      - notes.example.com
+    tls:
+      - hosts: [notes.example.com] # You need to update this as well
+        secretName: letsencrypt
+
+ingress:
+  enabled: true
+  isStaging: true
+  cloudflareToken: "CHANGE_ME_CLOUD_FLARE_TOKEN"
+  className: nginx
+  host: notes.example.com
+  secretName: letsencrypt
+  tls:
+    enabled: true
+  annotations:
+    cert-manager.io/issuer: letsencrypt
+
+backup:
+  enabled: true
+
+# --- Scheduling ---
+# Cron schedule for the backup job (e.g., "0 3 * * *" is 3 AM daily)
+  schedule: "0 3 * * *"
+
+# --- Target Trilium Configuration ---
+# Selector label used to find the running Trilium pod.
+# You MUST check the labels on your Trilium pod and adjust this.
+#  podSelector:
+#    key: app.kubernetes.io/instance
+#    value: trilium # <-- CHANGE THIS if your Trilium instance has a different name
+
+# The port Trilium is listening on inside the pod
+#  triliumPort: 8080
+
+# The path to the data volume *inside* the Trilium pod (default for official containers)
+#  triliumDataPath: /home/node/trilium-data
+
+# --- Remote Backup Server Configuration ---
+  remote:
+    user: ubuntu_user
+    host: 192.168.1.50
+    directory: "/home/ubuntu_user/backups" # Remote path to save the .tar file
+
+# --- SSH Key Management ---
+# The name of the Kubernetes Secret holding your SSH private key (created externally)
+  sshSecretName: trilium-backup-ssh-key
+  sshKeyFileName: id_rsa # The key name inside the secret (usually id_rsa)
+
+# --- Container Image ---
+# Use a minimal image that we can install dependencies on
+#  image:
+#    repository: alpine
+#    tag: latest
+#    pullPolicy: IfNotPresent

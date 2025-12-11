@@ -1,0 +1,30 @@
+{{- if .Values.ingress.enabled -}}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "trilium-oauth2-chart.fullname" . }}-share
+  labels:
+    {{- include "trilium-oauth2-chart.labels" . | nindent 4 }}
+  annotations:
+    {{ tpl ( toYaml .Values.ingress.annotations ) $ | indent 4 }}
+spec:
+  {{- with .Values.ingress.className }}
+  ingressClassName: {{ .  }}
+  {{- end }}
+  {{- if .Values.ingress.tls.enabled }}
+  tls:
+    - hosts: [{{ .Values.ingress.host }}]
+      secretName: {{ .Values.ingress.secretName }}
+  {{- end }}
+  rules:
+    - host: {{ .Values.ingress.host}}
+      http:
+        paths:
+          - path: /share
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "trilium-oauth2-chart.fullname" $ }}
+                port:
+                  number: {{ $.Values.trilium.service.port }}
+{{- end }}

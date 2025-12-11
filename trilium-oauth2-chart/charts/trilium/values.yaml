@@ -1,0 +1,51 @@
+image:
+  repository: triliumnext/trilium
+  tag: v0.99.5
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 8080
+  targetPort: 8080
+
+persistence:
+  existingClaim: "" # Leave empty to create one
+  size: 5Gi
+  accessMode: ReadWriteOnce
+  storageClass: "" # Leave empty for default
+
+config:
+  general:
+    instanceName: ""
+    # Disable authentication to Trilium? (if you're running it on a private network, or have authentication handled by another component)
+    noAuthentication: false
+    # Disable backups of the database?
+    noBackup: false
+  network:
+    host: "0.0.0.0"
+    port: 8080
+    https: false
+    certPath: ""
+    keyPath: ""
+    trustedReverseProxy: true
+
+
+probes:
+  startup:
+    enabled: true
+    initialDelaySeconds: 45
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 10
+  readiness:
+    enabled: true
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    timeoutSeconds: 10
+    failureThreshold: 3
+  liveness:
+    enabled: true
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    timeoutSeconds: 10
+    failureThreshold: 3

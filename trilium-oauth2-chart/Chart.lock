@@ -1,0 +1,9 @@
+dependencies:
+- name: trilium
+  repository: file://./charts/trilium
+  version: 1.0.0
+- name: oauth2-proxy
+  repository: https://oauth2-proxy.github.io/manifests
+  version: 9.0.0
+digest: sha256:e4cda2cd2441260a22beebab1f23db1ff46f9c08dde5d759f1943a13ac526e82
+generated: "2025-12-05T13:21:23.00367131-06:00"

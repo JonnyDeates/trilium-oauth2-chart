@@ -1,0 +1,43 @@
+{{- if .Values.backup.enabled -}}
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "{{ include "trilium-oauth2-chart.fullname" . }}-test-connection"
+  labels:
+    {{- include "trilium-oauth2-chart.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": test
+spec:
+  serviceAccountName: {{ include "trilium-oauth2-chart.serviceAccountName"  . }}
+  containers:
+    - name: kubectl
+      image: "{{ .Values.backup.image.repository | default "alpine" }}:{{ .Values.backup.image.tag | default "latest" }}"
+      command: ['/bin/sh', '-c']
+      args:
+        - |
+          echo "Installing dependencies..."
+          apk add --no-cache curl
+          curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+          chmod +x kubectl && mv kubectl /usr/local/bin/
+
+          echo "Testing access to CronJob..."
+          # Verify the CronJob exists
+          if kubectl get cronjob {{ include "trilium-oauth2-chart.fullname" . }}-backup; then
+            echo "SUCCESS: CronJob found."
+          else
+            echo "FAILURE: CronJob not found."
+            exit 1
+          fi
+
+          # Verify RBAC allows us to list pods (mimicking the backup script logic)
+          echo "Testing RBAC permissions..."
+
+          if kubectl get pods; then
+             echo "SUCCESS: Able to list pods."
+          else
+             echo "FAILURE: Cannot list pods. RBAC permissions might be wrong."
+             exit 1
+          fi
+
+  restartPolicy: Never
+{{- end -}}

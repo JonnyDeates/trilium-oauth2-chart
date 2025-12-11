@@ -1,0 +1,33 @@
+{{- if .Values.backup.enabled -}}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ include "trilium-oauth2-chart.serviceAccountName" . }}
+  labels:
+    {{- include "trilium-oauth2-chart.labels" . | nindent 4 }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ include "trilium-backup.fullname" . }}-role
+  labels:
+    {{- include "trilium-backup.labels" . | nindent 4 }}
+rules:
+  - apiGroups: [""]
+    resources: ["pods", "pods/exec"]
+    verbs: ["get", "list", "create", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ include "trilium-oauth2-chart.fullname" . }}-binding
+  labels:
+    {{- include "trilium-oauth2-chart.labels" . | nindent 4 }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "trilium-backup.serviceAccountName" . }}
+roleRef:
+  kind: Role
+  name: {{ include "trilium-oauth2-chart.fullname" . }}-role
+  apiGroup: rbac.authorization.k8s.io
+{{- end}}

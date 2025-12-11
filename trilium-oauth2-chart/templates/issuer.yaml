@@ -1,0 +1,38 @@
+{{- if .Values.ingress.enabled -}}
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  {{if .Values.ingress.isStaging}}
+  name: letsencrypt-staging
+  {{else}}
+  name: letsencrypt-prod
+  {{end}}
+  labels:
+    {{- include "trilium-oauth2-chart.labels" . | nindent 4 }}
+spec:
+  acme:
+    {{if .Values.ingress.isStaging}}
+    server:  https://acme-staging-v02.api.letsencrypt.org/directory
+    {{else}}
+    server: https://acme-v02.api.letsencrypt.org/directory
+    {{end}}
+    email: {{ .Values.email }}
+    privateKeySecretRef:
+      {{if .Values.ingress.isStaging}}
+      name: letsencrypt-staging
+      {{else}}
+      name: letsencrypt-prod
+      {{end}}
+    solvers:
+      {{- if .Values.ingress.cloudflareToken}}
+      - dns01:
+          cloudflare:
+            apiTokenSecretRef:
+              name: cloudflare-api-token-secret
+              key: api-token
+      {{- else }}
+      - http01:
+          ingress:
+            class: nginx
+      {{- end }}
+{{- end }}

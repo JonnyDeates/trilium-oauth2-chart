@@ -1,0 +1,43 @@
+## Overview
+
+This Helm chart, `Trilium OAuth2 Chart, simplifies the deployment and management of Trilium, a self-hosted note‑taking application, along with automated backups. It automates the creation of Kubernetes resources needed for Trilium to run, including PersistentVolumeClaims for data storage, ServiceAccounts and RBAC roles for backup functionality, and CronJobs to schedule backups.
+
+## Key Features
+
+*   **Trilium Deployment:**  Deploys a Trilium instance within a Kubernetes cluster.
+*   **Automated Backups:**  Configures automated backups of your Trilium data to a remote location.
+*   **Persistent Storage:**  Provides persistent storage using Kubernetes PersistentVolumeClaims (PVCs) to ensure data durability.
+*   **RBAC for Backups:**  Securely manages backup access using Kubernetes Role‑Based Access Control (RBAC).
+*   **Configuration Flexibility:**  Allows customization of various parameters, such as storage size, remote backup location, and backup schedule.
+
+## Configuration
+
+The chart's behavior is controlled through a `values.yaml` file.  Here are some key configuration options:
+
+*   **`persistence.size`**:  The size of the PersistentVolumeClaim for Trilium data.  (Default: `"10Gi"`)
+*   **`persistence.existingClaim`**:  If set to `true`, uses an existing PersistentVolumeClaim instead of creating a new one.
+*   **`backup.enabled`**: Enables or disables the automated backup functionality. (Default: `true`)
+*   **`backup.schedule`**:  The cron schedule for running backups. (Default: `"0 3 * * *"` – runs daily at 3:00 AM)
+*   **`backup.remote.host`**: The hostname or IP address of the remote server for backups.
+*   **`backup.remote.directory`**: The directory on the remote server where backups will be stored.
+*   **`backup.sshSecretName`**: The name of the Kubernetes Secret containing the SSH key for remote access.  This secret *must* exist before deploying the chart.
+*   **`backup.podSelector.key`**: The label key used to select the Trilium pod for backups.
+*   **`backup.podSelector.value`**: The label value used to select the Trilium pod for backups.
+
+**Important:**  You *must* create a Kubernetes Secret containing your SSH private key for remote backups.  The secret should be named as specified in `backup.sshSecretName`.
+
+## Dependencies
+
+*   **Kubernetes:** A running Kubernetes cluster.
+*   **Persistent Volume Provisioner:**  A Persistent Volume provisioner must be configured in your Kubernetes cluster if you are creating new Persistent Volumes.
+*   **SSH Key Secret:** A Kubernetes Secret containing the SSH private key for remote backups.  This secret *must* exist before deploying the chart.
+
+## Troubleshooting
+
+*   **Backup Failures:**  Check the logs of the backup CronJob for errors.  Verify that the SSH key is correctly configured and that the remote server is accessible.  Ensure the pod selector is correctly identifying the Trilium pod.
+*   **Persistent Volume Issues:**  If you encounter problems with persistent storage, check the status of the PersistentVolumeClaim and PersistentVolume.  Ensure the storage class is correctly configured.
+*   **Pod Selector Errors:** If the backup job fails to find the Trilium pod, double‑check the `backup.podSelector.key` and `backup.podSelector.value` settings.
+
+## Contact
+
+For support or questions, please contact .

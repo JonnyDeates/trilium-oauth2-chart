@@ -1,0 +1,96 @@
+{{- if .Values.backup.enabled -}}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "trilium-oauth2-chart.fullname" . }}-backup
+  labels:
+    {{- include "trilium-oauth2-chart.labels" . | nindent 4 }}
+spec:
+  schedule: {{ .Values.backup.schedule | default "0 3 * * *" | quote }}
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: {{ include "trilium-backup.serviceAccountName" . }}
+          containers:
+            - name: backup-worker
+              image: "{{ .Values.backup.image.repository | default "alpine" }}:{{ .Values.backup.image.tag | default "latest" }}"
+              imagePullPolicy: "{{ .Values.backup.image.imagePullPolicy | default "IfNotPresent" }}"
+              env:
+                # Environment Variables from values.yaml
+                - name: TRILIUM_LABEL_KEY
+                  {{- if and .Values.backup.podSelector .Values.backup.podSelector.key }}
+                  value: {{ .Values.backup.podSelector.key | quote }}
+                  {{- else }}
+                  value: "app.kubernetes.io/instance"
+                  {{- end }}
+                - name: TRILIUM_LABEL_VALUE
+                  {{- if and .Values.podSelector .Values.podSelector.value }}
+                  value: {{ .Values.podSelector.value | quote }}
+                  {{- else }}
+                  value: "trilium"
+                  {{- end }}
+                - name: TRILIUM_PORT
+                  value: {{ .Values.backup.triliumPort | default 8080 | quote }}
+                - name: TRILIUM_DATA_PATH
+                  value: {{ .Values.backup.triliumDataPath | default "/home/node/trilium-data" | quote }}
+                - name: REMOTE_USER
+                  value: {{ .Values.backup.remote.user | quote }}
+                - name: REMOTE_HOST
+                  value: {{ .Values.backup.remote.host | quote }}
+                - name: REMOTE_DIR
+                  value: {{ .Values.backup.remote.directory | quote }}
+                - name: SSH_KEY_FILE
+                  value: /etc/ssh-key/{{ .Values.backup.sshKeyFileName }}
+
+              command: ["/bin/sh", "-c"]
+              args:
+                - |
+                  set -e
+
+                  echo "Starting Trilium Backup CronJob at $(date)"
+
+                  # 1. Install dependencies
+                  apk add --no-cache openssh-client curl
+
+                  # 2. Install kubectl
+                  curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+                  chmod +x kubectl && mv kubectl /usr/local/bin/
+
+                  # 3. Find the Trilium pod using the label selector
+                  TRILIUM_POD=$(kubectl get pod -l $TRILIUM_LABEL_KEY=$TRILIUM_LABEL_VALUE -o jsonpath="{.items[0].metadata.name}")
+
+                  if [ -z "$TRILIUM_POD" ]; then
+                      echo "Error: Could not find a running pod with label $TRILIUM_LABEL_KEY=$TRILIUM_LABEL_VALUE."
+                      exit 1
+                  fi
+
+                  echo "Found Trilium pod: $TRILIUM_POD"
+
+                  # 4. Trigger Trilium's internal consistency check/backup
+                  echo "Triggering Trilium internal backup..."
+                  kubectl exec $TRILIUM_POD -- curl -s -X POST http://localhost:$TRILIUM_PORT/api/backend/backup > /dev/null
+
+                  # 5. Stream the backup folder via SSH
+                  echo "Streaming $TRILIUM_DATA_PATH/backup to $REMOTE_HOST:$REMOTE_DIR..."
+
+                  BACKUP_FILE_NAME="trilium-backup-$(date +%Y%m%d_%H%M%S).tar"
+
+                  # Pipe tar output from the pod -> local -> ssh -> remote file
+                  kubectl exec $TRILIUM_POD -- tar -cf - $TRILIUM_DATA_PATH/backup | \
+                  ssh -i $SSH_KEY_FILE -o StrictHostKeyChecking=no $REMOTE_USER@$REMOTE_HOST \
+                  "mkdir -p $REMOTE_DIR && cat > $REMOTE_DIR/$BACKUP_FILE_NAME"
+
+                  echo "Backup successfully streamed to $REMOTE_HOST/$BACKUP_FILE_NAME"
+
+              volumeMounts:
+                - name: ssh-key
+                  mountPath: "/etc/ssh-key"
+                  readOnly: true
+          restartPolicy: OnFailure
+          volumes:
+            - name: ssh-key
+              secret:
+                secretName: {{ .Values.backup.sshSecretName }}
+                defaultMode: 0400
+{{- end}}

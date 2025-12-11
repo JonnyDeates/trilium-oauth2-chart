@@ -1,0 +1,33 @@
+{{- if .Values.ingress.enabled -}}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "trilium-oauth2-chart.fullname" . }}
+  labels:
+    {{- include "trilium-oauth2-chart.labels" . | nindent 4 }}
+  annotations:
+    nginx.ingress.kubernetes.io/auth-url: "http://{{ .Release.Name }}-oauth2-proxy.{{ .Release.Namespace }}.svc.cluster.local:80/oauth2/auth" # The host machine's service that dictates us logging in
+    nginx.ingress.kubernetes.io/auth-signin: "https://{{ .Values.ingress.host }}/oauth2/start?rd=$escaped_request_uri" #The Domain and url of our auth sign in
+    nginx.ingress.kubernetes.io/auth-response-headers: "X-Auth-Request-User, X-Auth-Request-Email, Authorization" # Some good headers to have
+    cert-manager.io/issuer: letsencrypt
+spec:
+{{- with .Values.ingress.className }}
+  ingressClassName: {{ . }}
+  {{- end }}
+  {{- if .Values.ingress.tls.enabled }}
+  tls:
+    - hosts: [{{ .Values.ingress.host}}]
+      secretName: {{ .Values.ingress.secretName }}
+  {{- end }}
+  rules:
+    - host: {{ .Values.ingress.host}}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ $.Release.Name }}-trilium
+                port:
+                  number: {{ $.Values.trilium.service.port }}
+{{- end }}
