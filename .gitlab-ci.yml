@@ -20,7 +20,7 @@ deploy-chart-http:
   script:
     - echo "Packaging chart..."
     # 1. Package the chart (creates a .tgz file)
-    - helm package ./charts/secure-trilium-stack
+    - helm package .
 
     # 2. Upload using your curl command
     # We use $(ls *.tgz) to dynamically grab the file we just created
