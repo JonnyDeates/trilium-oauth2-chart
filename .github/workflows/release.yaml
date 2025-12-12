@@ -3,10 +3,9 @@ name: Release Helm Chart
 on:
   push:
     tags:
-      - '*' # Triggers on tags like v1.0.0, v0.2.1
+      - '*'
 
 env:
-  # CHANGE THIS: The path to your chart folder inside the repo
   CHART_DIR: "."
   REGISTRY: ghcr.io
 
@@ -15,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      packages: write  # REQUIRED to push to ghcr.io
+      packages: write
 
     steps:
       - name: Checkout Code

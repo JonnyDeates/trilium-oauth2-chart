@@ -54,9 +54,10 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 Create the name of the service account to use
 */}}
 {{- define "trilium-oauth2-chart.serviceAccountName" -}}
-{{- if and .Values.serviceAccount .Values.serviceAccount.create }}
-{{- default (include "trilium-oauth2-chart.fullname" .) .Values.serviceAccount.name }}
-{{- else }}
-{{- default (include "trilium-oauth2-chart.fullname" .)}}
-{{- end }}
-{{- end }}
+{{- $sa := .Values.serviceAccount | default dict -}}
+{{- if $sa.create -}}
+    {{- default (include "trilium-oauth2-chart.fullname" .) $sa.name -}}
+{{- else -}}
+    {{- default "default" $sa.name -}}
+{{- end -}}
+{{- end -}}
