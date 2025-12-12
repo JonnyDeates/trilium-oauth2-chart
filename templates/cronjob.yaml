@@ -19,19 +19,11 @@ spec:
               image: "{{ $image.repository | default "alpine" }}:{{ $image.tag | default "latest" }}"
               imagePullPolicy: "{{ $image.imagePullPolicy | default "IfNotPresent" }}"
               env:
-                # Environment Variables from values.yaml
+                {{- $podSelector := .Values.backup.podSelector | default dict }}
                 - name: TRILIUM_LABEL_KEY
-                  {{- if and .Values.backup.podSelector .Values.backup.podSelector.key }}
-                  value: {{ .Values.backup.podSelector.key | quote }}
-                  {{- else }}
-                  value: "app.kubernetes.io/instance"
-                  {{- end }}
+                  value: {{ $podSelector.key | default "app.kubernetes.io/instance" | quote }}
                 - name: TRILIUM_LABEL_VALUE
-                  {{- if and .Values.podSelector .Values.podSelector.value }}
-                  value: {{ .Values.podSelector.value | quote }}
-                  {{- else }}
-                  value: "trilium"
-                  {{- end }}
+                  value: {{ $podSelector.value | default "trilium" | quote }}
                 - name: TRILIUM_PORT
                   value: {{ .Values.backup.triliumPort | default 8080 | quote }}
                 - name: TRILIUM_DATA_PATH
