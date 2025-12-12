@@ -11,7 +11,7 @@ spec:
     spec:
       template:
         spec:
-          serviceAccountName: {{ include "trilium-oauth2-chart.serviceAccountName" . }}
+          serviceAccountName: {{ include "trilium-oauth2-chart.serviceAccountName" . }}-backups
           containers:
             - name: backup-worker
               {{- $backup := .Values.backup | default dict }}
@@ -61,16 +61,16 @@ spec:
 
                   echo "Found Trilium pod: $TRILIUM_POD"
 
-                  # 4. Trigger Trilium's internal consistency check/backup
-                  echo "Triggering Trilium internal backup..."
-                  kubectl exec $TRILIUM_POD -- curl -s -X POST http://localhost:$TRILIUM_PORT/api/backend/backup > /dev/null
+                  # 4. Stream the existing 'backup' directory via SSH
+                  # We simply tar up the folder where Trilium auto-saves its daily backups.
+                  # This includes the .db files and any metadata.
 
-                  # 5. Stream the backup folder via SSH
-                  echo "Streaming $TRILIUM_DATA_PATH/backup to $REMOTE_HOST:$REMOTE_DIR..."
+                  echo "Streaming contents of $TRILIUM_DATA_PATH/backup to $REMOTE_HOST:$REMOTE_DIR..."
 
+                  # Naming the file 'archive' to indicate it contains multiple internal backups
                   BACKUP_FILE_NAME="trilium-backup-$(date +%Y%m%d_%H%M%S).tar"
 
-                  # Pipe tar output from the pod -> local -> ssh -> remote file
+                  # 'tar' exists in the minimal Trilium container, so this exec works perfectly.
                   kubectl exec $TRILIUM_POD -- tar -cf - $TRILIUM_DATA_PATH/backup | \
                   ssh -i $SSH_KEY_FILE -o StrictHostKeyChecking=no $REMOTE_USER@$REMOTE_HOST \
                   "mkdir -p $REMOTE_DIR && cat > $REMOTE_DIR/$BACKUP_FILE_NAME"
