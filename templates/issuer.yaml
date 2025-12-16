@@ -1,8 +1,8 @@
-{{- if .Values.ingress.enabled -}}
+{{- if .Values.ingress.issuer.enabled -}}
 apiVersion: cert-manager.io/v1
 kind: Issuer
 metadata:
-  {{if .Values.ingress.isStaging}}
+  {{if .Values.ingress.issuer.isStaging}}
   name: letsencrypt-staging
   {{else}}
   name: letsencrypt-prod

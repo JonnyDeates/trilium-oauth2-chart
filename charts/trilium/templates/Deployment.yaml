@@ -82,7 +82,11 @@ spec:
       volumes:
         - name: data
           persistentVolumeClaim:
-            claimName: {{ .Values.persistence.existingClaim | default (include "trilium.fullname" .) }}
+            {{- if .Values.persistence.existingClaim }}
+            claimName: {{ .Values.persistence.existingClaim }}
+            {{- else }}
+            claimName: {{ (include "trilium.fullname" .)}}
+          {{- end }}
         - name: config
           configMap:
             name: {{ include "trilium.fullname" . }}-config

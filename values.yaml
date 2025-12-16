@@ -63,14 +63,16 @@ oauth2-proxy:
 
 ingress:
   enabled: true
-  isStaging: true
   cloudflareToken: "CHANGE_ME_CLOUD_FLARE_TOKEN"
   className: nginx
   host: notes.example.com
   secretName: letsencrypt
+  issuer:
+    enabled: true
+    isStaging: true
   tls:
     enabled: true
-  annotations:
+  annotations: # Shared between the share point ingress and the oauth2 secured trilium ingress
     cert-manager.io/issuer: letsencrypt
 
 backup:
@@ -102,7 +104,7 @@ backup:
 # --- SSH Key Management ---
 # The name of the Kubernetes Secret holding your SSH private key (created externally)
   sshSecretName: trilium-backup-ssh-key
-  sshKeyFileName: id_rsa # The key name inside the secret (usually id_rsa)
+  sshKeyFileName: id_ed25519 # The key name inside the secret (usually id_rsa)
 
 # --- Container Image ---
 # Use a minimal image that we can install dependencies on

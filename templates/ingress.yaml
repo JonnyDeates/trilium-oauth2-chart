@@ -9,7 +9,10 @@ metadata:
     nginx.ingress.kubernetes.io/auth-url: "http://{{ .Release.Name }}-oauth2-proxy.{{ .Release.Namespace }}.svc.cluster.local:80/oauth2/auth" # The host machine's service that dictates us logging in
     nginx.ingress.kubernetes.io/auth-signin: "https://{{ .Values.ingress.host }}/oauth2/start?rd=$escaped_request_uri" #The Domain and url of our auth sign in
     nginx.ingress.kubernetes.io/auth-response-headers: "X-Auth-Request-User, X-Auth-Request-Email, Authorization" # Some good headers to have
-    cert-manager.io/issuer: letsencrypt
+    {{- if .Values.ingress.annotations }}
+    {{ tpl ( toYaml .Values.ingress.annotations ) $ | nindent 4 }}
+    {{- else }}
+    {{- end }}
 spec:
 {{- with .Values.ingress.className }}
   ingressClassName: {{ . }}
