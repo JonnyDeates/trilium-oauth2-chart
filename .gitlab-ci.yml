@@ -24,5 +24,22 @@ deploy-chart-http:
         --user gitlab-ci-token:$CI_JOB_TOKEN \
         --form "chart=@$(ls *.tgz)" \
         "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/helm/api/stable/charts"
+
+    - echo "Verifying package registration..."
+    - |
+      for i in {1..10}; do
+      # Check if the version exists in the registry API
+      HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" --header "JOB-TOKEN: $CI_JOB_TOKEN" "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages?package_name=secure-trilium-stack&package_version=${CI_COMMIT_TAG}")
+      
+      if [ "$HTTP_CODE" -eq "200" ]; then
+      echo "Package successfully verified!"
+      exit 0
+      fi
+      
+      echo "Waiting for package processing... ($i/10)"
+      sleep 5
+      done
+      echo "Package failed to process on GitLab side."
+      exit 1
   rules:
     - if: $CI_COMMIT_TAG
